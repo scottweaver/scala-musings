@@ -16,7 +16,7 @@ object CustomSplit {
 
   trait Splitter[F[_]] {
 
-    def fsplit(value: String, separator: Char): F[String]
+    def fsplit(value: String, separator: String): F[String]
 
   }
 
@@ -26,8 +26,9 @@ object CustomSplit {
 
       def recSplit(part: String): Stream[String] = {
         if(part.length > 0) {
-          val head = part.takeWhile(_ != separator)
-          val tail = part.takeRight(part.length - (head.length + 1))
+          val i = part.indexOf(separator)
+          val head = if(i > -1) part.substring(0, i) else part
+          val tail = part.takeRight(part.length - (head.length + separator.size))
           head #:: recSplit(tail)
         } else {
           Stream.empty
@@ -38,21 +39,21 @@ object CustomSplit {
       
     }
     
-    def instance[F[_]](splitf: (String, Char) => F[String]): Splitter[F] =
+    def instance[F[_]](splitf: (String, String) => F[String]): Splitter[F] =
       new Splitter[F] {
-        def fsplit(value: String, separator: Char): F[String] = splitf(value, separator)
+        def fsplit(value: String, separator: String): F[String] = splitf(value, separator)
       }
 
   }
 
 
-  def split[F[_]](inS: String, sep: Char)(implicit splitter: Splitter[F]): F[String] = {
+  def split[F[_]](inS: String, sep: String)(implicit splitter: Splitter[F]): F[String] = {
     splitter.fsplit(inS, sep)
   }
 
   def main(args: Array[String]) {
     
-    val result: Stream[String] = split("foo,bar", ',')
+    val result: Stream[String] = split("foo,bar", ",")
     
     result.foreach(println(_))
 
