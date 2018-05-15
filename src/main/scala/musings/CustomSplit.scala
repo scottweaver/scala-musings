@@ -29,7 +29,10 @@ object CustomSplit {
           val i = part.indexOf(separator)
           val head = if(i > -1) part.substring(0, i) else part
           val tail = part.takeRight(part.length - (head.length + separator.size))
-          head #:: recSplit(tail)
+          if(head.nonEmpty)
+            head #:: recSplit(tail)
+          else
+            recSplit(tail)
         } else {
           Stream.empty
         }
@@ -53,9 +56,9 @@ object CustomSplit {
 
   def main(args: Array[String]) {
     
-    val result: Stream[String] = split("foo,bar", ",")
+    val result: Stream[String] = split("foo,bar,,,,,,,,", ",")
     
-    result.foreach(println(_))
+    result.foreach(s => println("> " + s))
 
   }
 
