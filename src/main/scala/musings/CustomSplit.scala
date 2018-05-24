@@ -1,5 +1,7 @@
 package musings
 
+import scala.annotation.tailrec
+
 
 /**
   * This bad boy came out of one of the questions our Python team asks candidates.
@@ -24,21 +26,24 @@ object CustomSplit {
 
     implicit val streamSplitter: Splitter[Stream] = instance { (value, separator) =>
 
-      def recSplit(part: String): Stream[String] = {
+      @tailrec
+      def recSplit(part: String, accum: Stream[String]): Stream[String] = {
         if(part.length > 0) {
           val i = part.indexOf(separator)
           val head = if(i > -1) part.substring(0, i) else part
-          val tail = part.takeRight(part.length - (head.length + separator.size))
+          val tail = part.takeRight(part.length - (head.length + separator.length))
           if(head.nonEmpty)
-            head #:: recSplit(tail)
+            recSplit(tail,  accum :+ head)
+          else if(tail.nonEmpty)
+            recSplit(tail, accum)
           else
-            recSplit(tail)
+            accum
         } else {
           Stream.empty
         }
       }
 
-      recSplit(value)
+      recSplit(value, Stream.empty)
       
     }
     
@@ -56,9 +61,15 @@ object CustomSplit {
 
   def main(args: Array[String]) {
     
-    val result: Stream[String] = split("foo,bar,,,,,,,,", ",")
+    val result: Stream[String] = split("foo,bar,,,,baz,,,,", ",")
     
     result.foreach(s => println("> " + s))
+
+    println("------------------- TEST 2 -----------------------")
+    
+    val result2: Stream[String] = split("foo,bar,,,,baz,,,,", ",")
+    
+    println("Take 1 :"+result2.take(1).head)
 
   }
 
